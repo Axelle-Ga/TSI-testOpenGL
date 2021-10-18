@@ -12,7 +12,12 @@ struct ShaderProgramSource
     std::string FragmentSource;
 };
 
-
+/**
+ * @brief Parser of shader file
+ * 
+ * @param filepath of the shader file
+ * @return ShaderProgramSource 
+ */
 static ShaderProgramSource ParseShader(const std::string filepath)
 {   
     std::ifstream stream(filepath);
@@ -28,7 +33,6 @@ static ShaderProgramSource ParseShader(const std::string filepath)
 
     while (std::getline(stream, line))
     {
-        printf("%s", line.c_str());
         if (line.find("#shader") != std::string::npos)
         {   
             if (line.find("vertex") != std::string::npos)
@@ -119,20 +123,33 @@ int main(void)
     std::cout<<glGetString(GL_VERSION)<<std::endl;
 
     //Vertex position
-    float positions[6] = {
+    float positions[] = {
         -0.5f, -0.5,
-         0.0f,  0.5f,
-         0.5f, -0.5f
+         0.5f, -0.5f,
+         0.5f, 0.5f,
+         -0.5f, 0.5f
     };
 
+    unsigned int indices[] = {
+        0,1,2,
+        2,3,0
+    };
+    
     //Definition of the buffer
     unsigned int buffer;
     glGenBuffers(1, &buffer );
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, 6*sizeof(float), positions, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), positions, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float)*2, 0);
     glEnableVertexAttribArray(0);
+
+    //Index buffer
+    unsigned int ibo;
+    glGenBuffers(1, &ibo );
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+
 
     ShaderProgramSource source = ParseShader("../res/shaders/Basic.shader");
 
@@ -146,7 +163,7 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
         //Draw the triangle
-        glDrawArrays(GL_TRIANGLES, 0, 3 );
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr );
 
 
         /* Swap front and back buffers */
@@ -156,7 +173,7 @@ int main(void)
         glfwPollEvents();
     }
 
-    //glDeleteProgram(shader);
+    glDeleteProgram(shader);
 
     glfwTerminate();
     return 0;
