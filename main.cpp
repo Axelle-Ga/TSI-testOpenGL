@@ -6,6 +6,29 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#define ASSERT(x) if (!(x)) __builtin_trap();
+#define GlCall(x) GlClearError();\
+    x;\
+    ASSERT(GlLogCall(#x, __FILE__, __LINE__ ))
+
+static void GlClearError()
+{
+    while (glGetError() != GL_NO_ERROR);    
+}
+
+static bool GlLogCall(const char* function, const char* file, int line)
+{
+    while (GLenum error = glGetError())
+    {
+        std::cout << "OpenGl_Error : ("<< error << ") :"<< function << " " 
+        << file << " : " << line << std::endl;
+        return false;
+    }  
+    return true;  
+}
+
+
+
 struct ShaderProgramSource
 {
     std::string VertexSource;
@@ -112,7 +135,7 @@ int main(void)
 
 
     /* Make the window's context current */
-    glfwMakeContextCurrent(window);
+    GlCall(glfwMakeContextCurrent(window));
 
     /* Init Glew */
     if(glewInit()!= GLEW_OK){
@@ -137,43 +160,44 @@ int main(void)
     
     //Definition of the buffer
     unsigned int buffer;
-    glGenBuffers(1, &buffer );
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), positions, GL_STATIC_DRAW);
+    GlCall(glGenBuffers(1, &buffer ));
+    GlCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
+    GlCall(glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), positions, GL_STATIC_DRAW));
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float)*2, 0);
-    glEnableVertexAttribArray(0);
+    GlCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float)*2, 0));
+    GlCall(glEnableVertexAttribArray(0));
 
     //Index buffer
     unsigned int ibo;
-    glGenBuffers(1, &ibo );
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+    GlCall(glGenBuffers(1, &ibo ));
+    GlCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
+    GlCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
 
 
     ShaderProgramSource source = ParseShader("../res/shaders/Basic.shader");
 
     unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
-    glUseProgram(shader);
+    GlCall(glUseProgram(shader));
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
+        GlCall(glClear(GL_COLOR_BUFFER_BIT));
 
         //Draw the triangle
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr );
+        GlCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr ));
 
 
         /* Swap front and back buffers */
-        glfwSwapBuffers(window);
+        GlCall(glfwSwapBuffers(window));
 
         /* Poll for and process events */
-        glfwPollEvents();
+        GlCall(glfwPollEvents());
+
     }
 
-    glDeleteProgram(shader);
+    GlCall(glDeleteProgram(shader));
 
     glfwTerminate();
     return 0;
