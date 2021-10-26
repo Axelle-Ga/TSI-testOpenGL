@@ -9,7 +9,10 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
 find_package(GLEW REQUIRED)
 
-add_executable(project1 main.cpp)
+# #Test set cpp files
+# set(project1 main.cpp VertexBuffer.cpp IndexBuffer.cpp Renderer.cpp)
+
+add_executable(project1 main.cpp VertexBuffer.cpp IndexBuffer.cpp Renderer.cpp)
 
 target_link_libraries(project1 OpenGL::GL)
 target_link_libraries(project1 glfw)

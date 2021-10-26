@@ -1,33 +1,14 @@
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-
-#define ASSERT(x) if (!(x)) __builtin_trap();
-#define GlCall(x) GlClearError();\
-    x;\
-    ASSERT(GlLogCall(#x, __FILE__, __LINE__ ))
-
-static void GlClearError()
-{
-    while (glGetError() != GL_NO_ERROR);    
-}
-
-static bool GlLogCall(const char* function, const char* file, int line)
-{
-    while (GLenum error = glGetError())
-    {
-        std::cout << "OpenGl_Error : ("<< error << ") :"<< function << " " 
-        << file << " : " << line << std::endl;
-        return false;
-    }  
-    return true;  
-}
-
-
+#include "Renderer.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 struct ShaderProgramSource
 {
@@ -146,7 +127,7 @@ int main(void)
     if(glewInit()!= GLEW_OK){
         std::cout<<"Glew init not ok"<<std::endl;
     }
-
+    {
     /*Print GL version*/
     std::cout<<glGetString(GL_VERSION)<<std::endl;
 
@@ -168,19 +149,14 @@ int main(void)
     GlCall(glBindVertexArray(vao));
     
     //Definition of the buffer
-    unsigned int buffer;
-    GlCall(glGenBuffers(1, &buffer ));
-    GlCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
-    GlCall(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), positions, GL_STATIC_DRAW));
+    VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+
 
     GlCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float)*2, 0));
     GlCall(glEnableVertexAttribArray(0));
 
     //Index buffer
-    unsigned int ibo;
-    GlCall(glGenBuffers(1, &ibo ));
-    GlCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
-    GlCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
+    IndexBuffer ib(indices, 6);
 
 
     ShaderProgramSource source = ParseShader("../res/shaders/Basic.shader");
@@ -199,7 +175,7 @@ int main(void)
     GlCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     float r = 0.0f;
-    float increment = 0.05f;
+    float increment = 0.005f;
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -210,7 +186,7 @@ int main(void)
         GlCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
 
         GlCall(glBindVertexArray(vao));
-        GlCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
+        ib.Bind();
 
         //Change color
         //Draw the triangle
@@ -218,11 +194,11 @@ int main(void)
 
         if (r>1.0f)
         {
-            increment = -0.05f;
+            increment = -0.005f;
         }
         else if (r< 0.0f)
         {
-            increment = 0.05f;
+            increment = 0.005f;
         }
         r+= increment;
 
@@ -235,7 +211,7 @@ int main(void)
     }
 
     GlCall(glDeleteProgram(shader));
-
+    }
     glfwTerminate();
     return 0;
 }
